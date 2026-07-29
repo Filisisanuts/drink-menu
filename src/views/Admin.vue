@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Storage from '../utils/storage'
 import Icon from '../components/Icon.vue'
+import DataManager from '../components/DataManager.vue'
 
 const router = useRouter()
 const settings = Storage.getSettings()
@@ -10,6 +11,8 @@ const drinks = Storage.getDrinks()
 const categories = Storage.getCategories()
 const orders = Storage.getOrders()
 const pendingOrders = orders.filter(o => o.status === 'pending')
+
+const showDataManager = ref(false)
 </script>
 
 <template>
@@ -70,7 +73,19 @@ const pendingOrders = orders.filter(o => o.status === 'pending')
         <span v-if="pendingOrders.length > 0" class="menu-badge">{{ pendingOrders.length }}</span>
         <Icon name="arrow-right" :size="16" color="var(--text-light)" />
       </div>
+
+      <div class="menu-item" @click="showDataManager = true">
+        <Icon name="settings" :size="20" color="var(--primary)" class="menu-icon" />
+        <div class="menu-content">
+          <span class="menu-title">数据管理</span>
+          <span class="menu-desc">导入、导出、备份数据</span>
+        </div>
+        <Icon name="arrow-right" :size="16" color="var(--text-light)" />
+      </div>
     </div>
+
+    <!-- 数据管理弹窗 -->
+    <DataManager v-if="showDataManager" @close="showDataManager = false" />
   </div>
 </template>
 
