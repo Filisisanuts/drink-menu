@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import Storage from '../utils/storage'
 import Icon from '../components/Icon.vue'
+import { SupabaseSync } from '../utils/supabaseSync'
 
 const emit = defineEmits(['close'])
 
@@ -9,6 +10,8 @@ const importFile = ref(null)
 const importPreview = ref(null)
 const showImportConfirm = ref(false)
 const importData = ref(null)
+const syncStatus = ref('')
+const isSyncing = ref(false)
 
 // 导出数据
 const exportData = () => {
@@ -99,6 +102,52 @@ const clearAllData = () => {
   }
 }
 
+// 从云端加载
+const loadFromCloud = async () => {
+  if (!confirm('从云端加载将覆盖本地数据，确定继续吗？')) return
+
+  isSyncing.value = true
+  syncStatus.value = '正在从云端加载...'
+
+  const result = await SupabaseSync.loadFromCloud()
+  isSyncing.value = false
+
+  if (result.success) {
+    syncStatus.value = '加载成功！页面将刷新'
+    setTimeout(() => window.location.reload(), 1500)
+  } else {
+    syncStatus.value = `加载失败：${result.message}`
+  }
+}
+
+// 同步到云端
+const syncToCloud = async () => {
+  isSyncing.value = true
+  syncStatus.value = '正在同步到云端...'
+
+  const result = await SupabaseSync.syncToCloud()
+  isSyncing.value = false
+
+  if (result.success) {
+    syncStatus.value = '同步成功！'
+  } else {
+    syncStatus.value = `同步失败：${result.message}`
+  }
+}
+
+// 清空云端
+const clearCloud = async () => {
+  if (!confirm('确定要清空云端数据吗？此操作不可恢复！')) return
+
+  isSyncing.value = true
+  syncStatus.value = '正在清空云端...'
+
+  const result = await SupabaseSync.clearCloud()
+  isSyncing.value = false
+
+  syncStatus.value = result.success ? '云端数据已清空' : `清空失败：${result.message}`
+}
+
 const close = () => {
   emit('close')
 }
@@ -115,6 +164,34 @@ const close = () => {
       </div>
 
       <div class="modal-body">
+        <!-- Supabase 云同步 -->
+        <div class="data-section cloud-section">
+          <div class="section-icon cloud">
+            <Icon name="settings" :size="24" color="white" />
+          </div>
+          <div class="section-content">
+            <h4>云端同步</h4>
+            <p>与 Supabase 云端数据库同步</p>
+            <div class="cloud-btns">
+              <button class="btn btn-primary" @click="loadFromCloud" :disabled="isSyncing">
+                <Icon name="order" :size="14" />
+                从云端加载
+              </button>
+              <button class="btn btn-primary" @click="syncToCloud" :disabled="isSyncing">
+                <Icon name="plus" :size="14" />
+                同步到云端
+              </button>
+              <button class="btn btn-danger" @click="clearCloud" :disabled="isSyncing">
+                <Icon name="trash" :size="14" />
+                清空云端
+              </button>
+            </div>
+            <p v-if="syncStatus" class="sync-status">{{ syncStatus }}</p>
+          </div>
+        </div>
+
+        <div class="section-divider"></div>
+
         <!-- 导出 -->
         <div class="data-section">
           <div class="section-icon">
@@ -156,7 +233,7 @@ const close = () => {
             <Icon name="trash" :size="24" color="var(--error)" />
           </div>
           <div class="section-content">
-            <h4>清空数据</h4>
+            <h4>清空本地数据</h4>
             <p>删除所有本地数据（不可恢复）</p>
             <button class="btn btn-danger" @click="clearAllData">
               <Icon name="trash" :size="16" />
@@ -207,7 +284,9 @@ const close = () => {
   background: var(--bg-paper);
   border: 2px solid var(--border-ink);
   width: 100%;
-  max-width: 360px;
+  max-width: 380px;
+  max-height: 80vh;
+  overflow-y: auto;
   box-shadow: 4px 4px 0 rgba(0,0,0,0.15);
 }
 
@@ -245,7 +324,14 @@ const close = () => {
 .data-section {
   display: flex;
   gap: 14px;
-  padding: 16px 0;
+  padding: 14px 0;
+}
+
+.cloud-section {
+  background: var(--primary-bg);
+  margin: -16px -16px 16px;
+  padding: 16px;
+  border-bottom: 2px dashed var(--border);
 }
 
 .section-icon {
@@ -257,6 +343,11 @@ const close = () => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.section-icon.cloud {
+  background: var(--primary);
+  border-color: var(--primary-dark);
 }
 
 .section-content {
@@ -274,6 +365,21 @@ const close = () => {
   font-size: 12px;
   color: var(--text-secondary);
   margin-bottom: 10px;
+}
+
+.cloud-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sync-status {
+  margin-top: 8px;
+  padding: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--primary-dark);
 }
 
 .section-divider {
@@ -295,11 +401,16 @@ const close = () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 14px;
+  padding: 8px 12px;
   border: 1px solid var(--border-ink);
   font-family: 'ZCOOL KuaiLe', cursive;
-  font-size: 13px;
+  font-size: 12px;
   cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-primary {
