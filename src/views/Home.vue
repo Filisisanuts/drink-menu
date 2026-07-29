@@ -25,7 +25,7 @@ initCartQuantities()
 window.addEventListener('cart-updated', initCartQuantities)
 
 const featuredDrinks = computed(() => {
-  return drinks.value.slice(0, 10)
+  return drinks.value.filter(d => d.featured === true)
 })
 
 const goToCategory = (categoryId) => {

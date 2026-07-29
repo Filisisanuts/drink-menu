@@ -38,6 +38,12 @@ const cancelDelete = () => {
   showDeleteConfirm.value = false
   deleteTarget.value = null
 }
+
+const toggleFeatured = (drink) => {
+  const updated = { ...drink, featured: !drink.featured }
+  Storage.updateDrink(drink.id, updated)
+  drinks.value = Storage.getDrinks()
+}
 </script>
 
 <template>
@@ -61,10 +67,21 @@ const cancelDelete = () => {
           <Icon v-else name="cocktail" :size="24" color="var(--text-light)" class="drink-item-placeholder" />
         </div>
         <div class="drink-item-content">
-          <h3 class="drink-item-name">{{ drink.name }}</h3>
+          <h3 class="drink-item-name">
+            {{ drink.name }}
+            <Icon v-if="drink.featured" name="star" :size="14" color="var(--accent-dark)" class="featured-icon" />
+          </h3>
           <span class="drink-item-category">{{ getCategoryName(drink.categoryId) }}</span>
         </div>
         <div class="drink-item-actions">
+          <button
+            class="action-btn"
+            :class="{ 'featured': drink.featured }"
+            @click.stop="toggleFeatured(drink)"
+            :title="drink.featured ? '取消推荐' : '设为推荐'"
+          >
+            <Icon name="star" :size="16" :color="drink.featured ? 'var(--accent-dark)' : 'var(--text-light)'" />
+          </button>
           <button class="action-btn edit" @click="editDrink(drink.id)">
             <Icon name="edit" :size="16" color="var(--primary)" />
           </button>
@@ -193,6 +210,16 @@ const cancelDelete = () => {
 .action-btn:hover {
   transform: scale(1.1);
   background: var(--bg-input);
+}
+
+.action-btn.featured {
+  background: var(--accent);
+  border-color: var(--accent-dark);
+}
+
+.featured-icon {
+  margin-left: 4px;
+  vertical-align: middle;
 }
 
 .btn-danger {

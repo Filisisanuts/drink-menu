@@ -15,7 +15,8 @@ const form = ref({
   description: '',
   categoryId: categories.value[0]?.id || '',
   tags: [],
-  image: ''
+  image: '',
+  featured: false
 })
 
 const tagInput = ref('')
@@ -30,7 +31,8 @@ onMounted(() => {
         description: drink.description || '',
         categoryId: drink.categoryId || '',
         tags: drink.tags || [],
-        image: drink.image || ''
+        image: drink.image || '',
+        featured: drink.featured || false
       }
       if (drink.image) {
         imagePreview.value = drink.image
@@ -200,6 +202,17 @@ const handleSubmit = () => {
         </div>
       </div>
 
+      <div class="form-group">
+        <label class="form-label">推荐到首页</label>
+        <div class="toggle-row">
+          <span class="toggle-label">设为精选酒品</span>
+          <label class="toggle-switch">
+            <input type="checkbox" v-model="form.featured" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
       <div class="form-actions">
         <button type="button" class="btn btn-secondary" @click="router.back()">取消</button>
         <button type="submit" class="btn btn-primary">
@@ -310,5 +323,68 @@ select.input {
 
 .form-actions .btn {
   flex: 1;
+}
+
+/* Toggle Switch */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-ink);
+}
+
+.toggle-label {
+  font-family: 'ZCOOL KuaiLe', cursive;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.toggle-switch {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  cursor: pointer;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-input);
+  border: 2px solid var(--border-ink);
+  border-radius: 13px;
+  transition: all 0.2s;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 2px;
+  bottom: 2px;
+  background: var(--text-light);
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: var(--primary-bg);
+  border-color: var(--primary);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(22px);
+  background: var(--primary);
 }
 </style>
