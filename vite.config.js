@@ -5,4 +5,8 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig(({ mode }) => ({
   plugins: [vue()],
   base: mode === 'production' ? '/drink-menu/' : '/',
+  build: {
+    // 压缩图片数据
+    chunkSizeWarningLimit: 1000,
+  }
 }))

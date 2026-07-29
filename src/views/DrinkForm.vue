@@ -43,15 +43,46 @@ const handleImageUpload = (event) => {
   const file = event.target.files[0]
   if (!file) return
 
-  if (file.size > 5 * 1024 * 1024) {
-    alert('图片大小不能超过 5MB')
+  if (file.size > 10 * 1024 * 1024) {
+    alert('图片大小不能超过 10MB')
     return
   }
 
+  // 压缩图片
   const reader = new FileReader()
   reader.onload = (e) => {
-    form.value.image = e.target.result
-    imagePreview.value = e.target.result
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+
+      // 限制最大尺寸为 400px
+      let width = img.width
+      let height = img.height
+      const maxSize = 400
+
+      if (width > height) {
+        if (width > maxSize) {
+          height = (height * maxSize) / width
+          width = maxSize
+        }
+      } else {
+        if (height > maxSize) {
+          width = (width * maxSize) / height
+          height = maxSize
+        }
+      }
+
+      canvas.width = width
+      canvas.height = height
+      ctx.drawImage(img, 0, 0, width, height)
+
+      // 压缩为 JPEG，质量 0.7
+      const compressed = canvas.toDataURL('image/jpeg', 0.7)
+      form.value.image = compressed
+      imagePreview.value = compressed
+    }
+    img.src = e.target.result
   }
   reader.readAsDataURL(file)
 }
